@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <sys/wait.h>
 
 #define SCOOTD_ASSERT(_X) assert(_X)
@@ -107,6 +108,65 @@ int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread
 int scootd_util_close_shared_memroy(scoot_device *pScoot);
 
 
+#define SCOOTD_DBGLVL_NONE    0
+#define SCOOTD_DBGLVL_IOPATH  1
+#define SCOOTD_DBGLVL_ERROR   2
+#define SCOOTD_DBGLVL_INFO    3
+#define SCOOTD_DBGLVL_DETAIL  4
+#define SCOOTD_DBGLVL_VERBOSE 5
+
+#define SCOOTD_DBGLVL_COMPILE SCOOTD_DBGLVL_ERROR
+
+
+static inline int scootd_get_verbosity(int local)
+{
+    return local;
+}
+
+extern FILE *gDbgLogFd;
+
+
+static inline void getCurrentTime(char *input, int max) 
+{
+    struct timeval tv;
+    struct tm *tm_info;
+    char buffer[64];
+
+    gettimeofday(&tv, NULL);
+    tm_info = localtime(&tv.tv_sec);
+
+
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
+    snprintf(input, max, "[%s.%06ld]", buffer, tv.tv_usec);
+}
+
+
+
+static inline void scootd_dbg_printf(int verbose, const char *fmt, ...)
+{
+    va_list args;
+	
+    if(verbose >=  SCOOTD_DBGLVL_COMPILE )
+    {   
+		char buf[256];
+		char buf2[64];
+		va_start(args, fmt);
+        vsnprintf(buf, sizeof(buf), fmt, args);
+        va_end(args);
+
+		getCurrentTime(buf2, 64);
+
+		printf("SCOOTD%s:%s", buf2, buf);
+		if(gDbgLogFd)
+		{
+			fprintf(gDbgLogFd, "SCOOTD%s:%s", buf2, buf);
+		}
+		
+    }
+
+}
+
+#define SCOOTD_PRINT(__verbose, __format, ...) do { if( __verbose >= SCOOTD_DBGLVL_COMPILE) scootd_dbg_printf(__verbose, __format, __VA_ARGS__); } while (0)\
 
 
 #endif

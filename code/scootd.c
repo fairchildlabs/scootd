@@ -1,5 +1,15 @@
 #include <scootd.h>
 
+/******************************************************/
+/********************* Globals ************************/
+/******************************************************/
+
+
+FILE *gDbgLogFd = NULL;
+
+/******************************************************/
+/********************* Functions ************************/
+/******************************************************/
 
 void * dummy_thread( void * pvScootDevice)
 {
@@ -151,6 +161,8 @@ int main(int argc, char **argv)
 	struct tm *tmp;
 	char formatted_time[50];
 	scootd_thread_config scdThreadConfig[SCOOTD_MAX_THREADS];
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+	
 
 	//initialize memory zero
 	memset(&aScootDevice, 0, sizeof(scoot_device));
@@ -166,7 +178,7 @@ int main(int argc, char **argv)
 	}
 
 
-	printf("scootd - Lab3\n");
+	SCOOTD_PRINT(verbose, "scootd(argc = %d)\n", argc);
 
 
 	if(	scootd_util_open_shared_memory("scootd_shared.mem", &aScootDevice))
