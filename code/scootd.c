@@ -78,13 +78,13 @@ int iFrameRateCam[] =
 
 char *szBaseVideoPath = "/mnt/";
 
-void * videoX_usb_run(void * pvScootdThreads)
+void * videoX_usb_run(void * pvThread)
 {
 	char fn[128];
 	char cmdbuf[512];
-	scootd_thread_config *pScootThread = pvScootdThreads;
-	scoot_device *pScootDevice = pScootThread->pScootDevice;
-	int idx = pScootThread->thread_index;
+	scootd_threads *pThread = pvThread;
+	scoot_device *pScootDevice = pThread->pvScootDevice;
+	int idx = pThread->idx;
 		
 	int fr = iFrameRateCam[pScootDevice->pState->vid[idx].frame_rate];	
 	char *szRes = szUSBCamResolution[pScootDevice->pState->vid[idx].resolution];
@@ -92,7 +92,7 @@ void * videoX_usb_run(void * pvScootdThreads)
 	int video_device = 0;	
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 		
-	if(pScootThread->thread_index == 1)
+	if(1 == idx)
 	{
 		video_device = 2;
 	}
@@ -113,7 +113,7 @@ void * videoX_usb_run(void * pvScootdThreads)
 
 	SCOOTD_PRINT(verbose, "SENDING CMD> %s\n", cmdbuf);
 
-	scootd_util_run_command_nonblocking(pScootThread, cmdbuf);
+	scootd_util_run_command_nonblocking(pThread, cmdbuf);
 	return NULL;
 
 }
@@ -127,9 +127,8 @@ void * videoX_usb_run(void * pvScootdThreads)
 
 
 
-void scootd_state_change(unsigned int old_state, scootd_thread_config * pScootdThreads)
+void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
 {
-	scoot_device *	pScootDevice = pScootdThreads->pScootDevice;
 	scoot_state *	pOldState = (scoot_state *) &old_state;
 	scootd_threads * pThread;
 	int 			i;
@@ -159,9 +158,8 @@ void scootd_state_change(unsigned int old_state, scootd_thread_config * pScootdT
 			SCOOTD_PRINT(verbose, "VIDEO[%d] SET\n", i);
 			
 			pThread = &pScootDevice->threads[SCOOTD_THREAD_VIDEO_0 + i];
-
 		
-			pThread->thread_handle = scootd_util_create_thread(videoX_usb_run, &pScootdThreads[SCOOTD_THREAD_VIDEO_0 + i]);
+			pThread->thread_handle = scootd_util_create_thread(videoX_usb_run, pThread);
 		}
 
 	}
@@ -178,7 +176,6 @@ int main(int argc, char **argv)
 	time_t t;
 	struct tm *tmp;
 	char formatted_time[50];
-	scootd_thread_config scdThreadConfig[SCOOTD_MAX_THREADS];
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 	
 
@@ -186,12 +183,8 @@ int main(int argc, char **argv)
 	memset(&aScootDevice, 0, sizeof(scoot_device));
 	for(i = 0; i < SCOOTD_MAX_THREADS; i++)
 	{
-		scdThreadConfig[i].pScootDevice = &aScootDevice;
-		scdThreadConfig[i].thread_index = i;
-
 		aScootDevice.threads[i].idx = i;
 		aScootDevice.threads[i].pvScootDevice = &aScootDevice;
-
 		
 	}
 
@@ -216,7 +209,7 @@ int main(int argc, char **argv)
 				
 				printf("SCOOTD:State Change old_state = 0x%08x new_state = 0x%08x @ %s \n", old_state, aScootDevice.pState->state, formatted_time);
 
-				scootd_state_change(old_state, &scdThreadConfig[0]);
+				scootd_state_change(old_state, &aScootDevice);
 
 				printf("SCOOTD: State Return\n");	
 

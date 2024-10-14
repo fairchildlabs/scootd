@@ -84,20 +84,22 @@ typedef struct
 	
 	
 } scoot_device;
-
+#if 0
 typedef struct
 {
 	int thread_index;
 	scoot_device *pScootDevice;
 
 } scootd_thread_config;
+#endif
+
 
 int scootd_util_open_shared_memory(char *strFileName, scoot_device *pScoot);
 
-pthread_t scootd_util_create_thread(void * (*thread_func) (void *), scootd_thread_config *pScootThreadConfig);
+pthread_t scootd_util_create_thread(void * (*thread_func) (void *), scootd_threads *pThread);
 
-int scootd_util_run_command(scootd_thread_config *pScootThread, const char * command);
-int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, const char * command);
+int scootd_util_run_command(scootd_threads *pThread, const char * command);
+int scootd_util_run_command_nonblocking(scootd_threads *pThread, const char * command);
 
 
 

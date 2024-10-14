@@ -49,19 +49,18 @@ int scootd_util_close_shared_memroy(scoot_device *pScoot)
 
 //AI: https://copilot.microsoft.com/sl/huDnvWgVZZY
 
-pthread_t scootd_util_create_thread(void * (*thread_func) (void *), scootd_thread_config *pScootThread)
+pthread_t scootd_util_create_thread(void * (*thread_func) (void *), scootd_threads *pThread)
 {
 	pthread_t		thread;
-	scootd_threads   *pThread;
 	int 			result;
 	scoot_device *pScootDevice;
-	int idx = pScootThread->thread_index;
+	int idx = pThread->idx;
 
-	pScootDevice = &pScootThread->pScootDevice[idx];
+	pScootDevice = pThread->pvScootDevice;
 	pThread = &pScootDevice->threads[idx]; 
 	pThread->bRun = true;
 	// Create the thread
-	result				= pthread_create(&thread, NULL, thread_func, pScootThread);
+	result				= pthread_create(&thread, NULL, thread_func, pThread);
 
 	if (result != 0)
 	{
@@ -146,12 +145,12 @@ int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread
 
 	if(scootd_util_character_to_pipe(pThread, 'q'))
 	{
-		printf("ERROR - CHAR 'q' to pioe(%d)\n", pThread->idx);
+		printf("ERROR - CHAR 'q' to pipe(%d)\n", pThread->idx);
 		return -1;
 	}
 	else
 	{
-		printf("GOOD -  CHAR 'q' to piope(%d)\n", pThread->idx);
+		printf("GOOD -  CHAR 'q' to pipe(%d)\n", pThread->idx);
 	}
 
 	pThread->bRun = false;
@@ -187,32 +186,32 @@ int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread
 
 
 
-int scootd_util_run_command_nonblocking(scootd_thread_config *pScootThread, const char * command)
+int scootd_util_run_command_nonblocking(scootd_threads *pThread, const char * command)
 {
 	scoot_device *pScootDevice;
 	FILE			*pipe;
 	char			*buffer  ;
 	char *			result = NULL; 
 	size_t			result_size = 0;
-	int idx = pScootThread->thread_index;
+	int idx = pThread->idx;
 	int count = 0;
 	const int       usSelectTimeout = 500000;	
-	scootd_threads	 *pThread;
 	pid_t pid;	
 
 
-	pScootDevice = &pScootThread->pScootDevice[idx];
+	pScootDevice = pThread->pvScootDevice;
 
 	pThread = &pScootDevice->threads[idx]; 
 
-	printf("scootd_util_run_command_nonblocking() POPEN usSelectTimeout = %d (%s)\n", usSelectTimeout, command);
+	printf("scootd_util_run_command_nonblocking(%d) POPEN usSelectTimeout = %d (%s) pThread=%p\n", idx, usSelectTimeout, command, pThread);
 
 	pid = popen2(command, &pThread->infd, &pThread->outfd);
 
-	printf("POPEN PID = %d INFD = %d OUTFD %d \n", pid, pThread->infd, pThread->outfd);
 	
 	pThread->outpipe  = fdopen(pThread->outfd, "r");
 	pThread->inpipe = fdopen(pThread->infd, "w");
+
+	printf("POPEN PID = %d INFD = %d OUTFD %d (%p:%p)\n", pid, pThread->infd, pThread->outfd, pThread->outpipe, pThread->inpipe);
 
 	pThread->pid = pid;
 	
@@ -257,7 +256,7 @@ int scootd_util_character_to_pipe(scootd_threads * pThread, char character)
 	FILE *			pipe;
 	pipe				= pThread->inpipe;
 
-	printf("scootd_util_character_to_pipe(%p) char = %c\n", pipe, character);
+	printf("scootd_util_character_to_pipe(%d)(%p:%p) char = %c\n", pThread->idx, pThread, pipe, character);
 
 	if (pipe == NULL)
 	{
