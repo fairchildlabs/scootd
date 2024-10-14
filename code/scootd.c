@@ -91,15 +91,19 @@ void * videoX_usb_run(void * pvThread)
 	int raw = pScootDevice->pState->vid[idx].raw;
 	int video_device = 0;	
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
-		
+	char *ffmt = "mp4";	
 	if(1 == idx)
 	{
 		video_device = 2;
 	}
-	
+
+	if(raw)
+	{
+		ffmt = "mov";
+	}
 
 	
-	sprintf(fn, "%s00%10d_%d_%08x_%s.mov", szBaseVideoPath, time(NULL), video_device, pScootDevice->pState->state, szRes);
+	sprintf(fn, "%s00%10d_%d_%08x_%s.%s", szBaseVideoPath, time(NULL), video_device, pScootDevice->pState->state, szRes, ffmt);
 
 	if(raw)
 	{
