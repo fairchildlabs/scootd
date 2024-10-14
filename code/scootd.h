@@ -25,7 +25,7 @@
 typedef union 
 {
 	unsigned int state;
-	struct __attribute__((packed)) 
+	struct __attribute__((packed)) //packed means that the compiler doesn't add padding.   Otherwise, the compiler will line up weach vid[] on 32-bit or 64-bit boundary
 	{
 		unsigned int video        :  1; //bit 0
 		unsigned int frame_rate   :  1; //bit 1 
@@ -35,7 +35,7 @@ typedef union
 
 	} vid[2];
 
-} scoot_state ;  //packed means that the compiler doesn't add padding.
+} scoot_state ;  
 
 
 //  0xABCD_EF0 12
@@ -85,14 +85,7 @@ typedef struct
 	
 	
 } scoot_device;
-#if 0
-typedef struct
-{
-	int thread_index;
-	scoot_device *pScootDevice;
 
-} scootd_thread_config;
-#endif
 
 
 int scootd_util_open_shared_memory(char *strFileName, scoot_device *pScoot);
