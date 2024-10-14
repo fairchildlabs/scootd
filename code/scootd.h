@@ -21,10 +21,10 @@
 
 #define SCOOTD_THREAD_VIDEO_0 0
 
-typedef union
+typedef union 
 {
 	unsigned int state;
-	struct
+	struct __attribute__((packed)) 
 	{
 		unsigned int video        :  1; //bit 0
 		unsigned int frame_rate   :  1; //bit 1 
@@ -34,7 +34,7 @@ typedef union
 
 	} vid[2];
 
-} scoot_state;
+} scoot_state ;  //packed means that the compiler doesn't add padding.
 
 
 //  0xABCD_EF0 12

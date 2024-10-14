@@ -78,33 +78,40 @@ int iFrameRateCam[] =
 
 char *szBaseVideoPath = "/mnt/";
 
-void * video0_run(void * pvScootdThreads)
+void * videoX_usb_run(void * pvScootdThreads)
 {
 	char fn[128];
 	char cmdbuf[512];
 	scootd_thread_config *pScootThread = pvScootdThreads;
 	scoot_device *pScootDevice = pScootThread->pScootDevice;
-	int fr = iFrameRateCam[pScootDevice->pState->vid[0].frame_rate];	
-	char *szRes = szUSBCamResolution[pScootDevice->pState->vid[0].resolution];
-	int raw = pScootDevice->pState->vid[0].raw;
-	
+	int idx = pScootThread->thread_index;
 		
+	int fr = iFrameRateCam[pScootDevice->pState->vid[idx].frame_rate];	
+	char *szRes = szUSBCamResolution[pScootDevice->pState->vid[idx].resolution];
+	int raw = pScootDevice->pState->vid[idx].raw;
+	int video_device = 0;	
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+		
+	if(pScootThread->thread_index == 1)
+	{
+		video_device = 2;
+	}
+	
 
 	
+	sprintf(fn, "%s00%10d_%d_%08x_%s.mov", szBaseVideoPath, time(NULL), video_device, pScootDevice->pState->state, szRes);
 
 	if(raw)
 	{
-		sprintf(fn, "%s00%10d_%08x_%s.mov", szBaseVideoPath, time(NULL), pScootDevice->pState->state, szRes);
-		sprintf(cmdbuf, "ffmpeg -f v4l2 -framerate %d -video_size %s -c:v mjpeg -i /dev/video0  -c:v copy %s", fr, szRes, fn);
+		sprintf(cmdbuf, "ffmpeg -f v4l2 -framerate %d -video_size %s -c:v mjpeg -i /dev/video%d  -c:v copy %s", fr, szRes, video_device, fn);
 	}
 	else
 	{
-		sprintf(fn, "%s00%10d_%08x_%s.mp4", szBaseVideoPath, time(NULL), pScootDevice->pState->state, szRes);
-		sprintf(cmdbuf, "ffmpeg -f v4l2 -framerate %d -video_size %s -i /dev/video0 -preset faster -pix_fmt yuv420p %s", fr, szRes, fn);
+		sprintf(cmdbuf, "ffmpeg -f v4l2 -framerate %d -video_size %s -i /dev/video%d -preset faster -pix_fmt yuv420p %s", fr, szRes, video_device, fn);
 	}
 
 
-	printf("SENDING CMD> %s\n", cmdbuf);
+	SCOOTD_PRINT(verbose, "SENDING CMD> %s\n", cmdbuf);
 
 	scootd_util_run_command_nonblocking(pScootThread, cmdbuf);
 	return NULL;
@@ -118,35 +125,46 @@ void * video0_run(void * pvScootdThreads)
 
 
 
-void scootd_state_change(unsigned int old_state, scootd_thread_config *pScootdThreads)
+
+
+void scootd_state_change(unsigned int old_state, scootd_thread_config * pScootdThreads)
 {
-	scoot_device *pScootDevice = pScootdThreads->pScootDevice;
-	scoot_state  *pOldState = (scoot_state  *)&old_state;
-	scootd_threads	 *pThread;
-	
+	scoot_device *	pScootDevice = pScootdThreads->pScootDevice;
+	scoot_state *	pOldState = (scoot_state *) &old_state;
+	scootd_threads * pThread;
+	int 			i;
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 
-	printf("scootd_state_change = 0x%08x  old_state = 0x%08x\n", pScootDevice->pState->state, pOldState->state);		
+	printf("scootd_state_change = 0x%08x  old_state = 0x%08x\n", pScootDevice->pState->state, pOldState->state);
 
-	if(pOldState->vid[0].video)
+	for (i = 0; i < 2; i++)
 	{
-		pThread = &pScootDevice->threads[SCOOTD_THREAD_VIDEO_0]; 
+		unsigned char vid = *(unsigned char *)(&pOldState->vid[i]);
+
+		SCOOTD_PRINT(verbose, "VID[%d] %p = 0x%02x\n", i, &pOldState->vid[i], (int)vid);
 		
-		if(pThread->thread_handle)
+
+		if (pOldState->vid[i].video)
 		{
-			scootd_util_kill_thread(pScootDevice, pThread);
+			pThread = &pScootDevice->threads[SCOOTD_THREAD_VIDEO_0 + i];
+
+			if (pThread->thread_handle)
+			{
+				scootd_util_kill_thread(pScootDevice, pThread);
+			}
 		}
+
+		if (pScootDevice->pState->vid[i].video)
+		{
+			SCOOTD_PRINT(verbose, "VIDEO[%d] SET\n", i);
+			
+			pThread = &pScootDevice->threads[SCOOTD_THREAD_VIDEO_0 + i];
+
+		
+			pThread->thread_handle = scootd_util_create_thread(videoX_usb_run, &pScootdThreads[SCOOTD_THREAD_VIDEO_0 + i]);
+		}
+
 	}
-	
-	if(pScootDevice->pState->vid[0].video)
-	{
-
-		pThread = &pScootDevice->threads[SCOOTD_THREAD_VIDEO_0]; 
-
-
-		pThread->thread_handle = scootd_util_create_thread(video0_run, &pScootdThreads[SCOOTD_THREAD_VIDEO_0] );
-	}
-	
-
 
 }
 
@@ -169,7 +187,7 @@ int main(int argc, char **argv)
 	for(i = 0; i < SCOOTD_MAX_THREADS; i++)
 	{
 		scdThreadConfig[i].pScootDevice = &aScootDevice;
-		scdThreadConfig[i].thread_index = 0;
+		scdThreadConfig[i].thread_index = i;
 
 		aScootDevice.threads[i].idx = i;
 		aScootDevice.threads[i].pvScootDevice = &aScootDevice;
