@@ -14,6 +14,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <errno.h>
 #include <sys/wait.h>
 
 #define SCOOTD_ASSERT(_X) assert(_X)
@@ -162,6 +163,8 @@ static inline void scootd_dbg_printf(int verbose, const char *fmt, ...)
 		if(gDbgLogFd)
 		{
 			fprintf(gDbgLogFd, "SCOOTD%s:%s", buf2, buf);
+			
+			fflush(gDbgLogFd);
 		}
 		
     }

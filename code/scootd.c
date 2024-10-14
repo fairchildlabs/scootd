@@ -126,8 +126,29 @@ void * videoX_usb_run(void * pvThread)
 
 
 
+void scootd_start_log_file(char *logfn)
+{
+	gDbgLogFd = fopen(logfn, "a");
 
+	if(gDbgLogFd)
+	{
+		SCOOTD_PRINT(SCOOTD_DBGLVL_ERROR, "**OPEN LOG(%s)%p**************************************************\n", logfn, gDbgLogFd);	
 
+	}
+	else
+	{
+		printf("CAN NOT OPEN %s [%d] %s\n", logfn, errno, strerror(errno));
+	}
+}	
+
+void scootd_close_log_file(void)
+{
+	if(gDbgLogFd)
+	{
+		fclose(gDbgLogFd);
+	}
+			
+}	
 
 
 
@@ -138,7 +159,7 @@ void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
 	int 			i;
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 
-	printf("scootd_state_change = 0x%08x  old_state = 0x%08x\n", pScootDevice->pState->state, pOldState->state);
+	SCOOTD_PRINT(verbose, "scootd_state_change = 0x%08x  old_state = 0x%08x\n", pScootDevice->pState->state, pOldState->state);
 
 	for (i = 0; i < 2; i++)
 	{
@@ -182,6 +203,9 @@ int main(int argc, char **argv)
 	char formatted_time[50];
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 	
+	scootd_start_log_file("scootdx.log");
+	
+	
 
 	//initialize memory zero
 	memset(&aScootDevice, 0, sizeof(scoot_device));
@@ -198,7 +222,7 @@ int main(int argc, char **argv)
 
 	if(	scootd_util_open_shared_memory("scootd_shared.mem", &aScootDevice))
 	{
-		printf("Error opening shared memory\n");
+		SCOOTD_PRINT(SCOOTD_DBGLVL_ERROR, "Error opening shared memory(%d)\n", 0);
 	}
 	else
 	{
@@ -207,20 +231,19 @@ int main(int argc, char **argv)
 			if(old_state != aScootDevice.pState->state)
 			{
 				usleep(10);
-				 time(&t);
+				time(&t);
     			tmp = localtime(&t);
 				strftime(formatted_time, sizeof(formatted_time), "%a %b %d %H:%M:%S %Y", tmp);
 				
-				printf("SCOOTD:State Change old_state = 0x%08x new_state = 0x%08x @ %s \n", old_state, aScootDevice.pState->state, formatted_time);
+				SCOOTD_PRINT(verbose, "SCOOTD:State Change old_state = 0x%08x new_state = 0x%08x @ %s \n", old_state, aScootDevice.pState->state, formatted_time);
 
 				scootd_state_change(old_state, &aScootDevice);
 
-				printf("SCOOTD: State Return\n");	
-
-
+				SCOOTD_PRINT(verbose, "SCOOTD: State Return state = %08x\n", aScootDevice.pState->state);	
 
 				old_state = aScootDevice.pState->state;
-				sleep(1);
+
+				usleep(1000);
 			}
 			else
 			{
@@ -233,6 +256,7 @@ int main(int argc, char **argv)
 		
 	}
 
+	scootd_close_log_file();
 
 	return 0;
 }
