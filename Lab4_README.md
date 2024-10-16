@@ -18,9 +18,11 @@ $ make scootdtest
 ```
 ## Test Drive Lab4
 
+```
 $ ./scootd
 2$ cd scootd/code
 2$ ./testdrive4.sh 
+```
 
 
 
