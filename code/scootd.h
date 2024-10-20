@@ -22,6 +22,10 @@
 
 
 #define SCOOTD_THREAD_VIDEO_0 0
+#define SCOOTTHREAD_VIDEO_1  1
+#define SCOOTD_THREAD_GPS  2
+
+
 #define SCOOTD_MAX_VIDEO 2
 
 typedef union 

@@ -293,19 +293,31 @@ int scootd_GPS_setupSerial(const char * device)
 		return - 1;
 	}
 
-	struct termios options;
-	tcgetattr(fd, &options);
+	struct termios tty;
+	tcgetattr(fd, &tty);
 
-	cfsetispeed(&options, B9600);
-	cfsetospeed(&options, B9600);
+	cfsetispeed(&tty, B9600);
+	cfsetospeed(&tty, B9600);
 
-	options.c_cflag 	|= (CLOCAL | CREAD);
-	options.c_cflag 	&= ~PARENB;
-	options.c_cflag 	&= ~CSTOPB;
-	options.c_cflag 	&= ~CSIZE;
-	options.c_cflag 	|= CS8;
+	tty.c_cflag &= ~PARENB; // No parity bit
+	tty.c_cflag &= ~CSTOPB; // One stop bit
+	tty.c_cflag &= ~CSIZE;
+	tty.c_cflag |= CS8; // 8 bits per byte
+	tty.c_cflag &= ~CRTSCTS; // No flow control
+	tty.c_cflag |= CREAD | CLOCAL; // Read and enable receiver
 
-	tcsetattr(fd, TCSANOW, &options);
+	tty.c_lflag &= ~ICANON;
+	tty.c_lflag &= ~ECHO;
+	tty.c_lflag &= ~ECHOE;
+	tty.c_lflag &= ~ECHONL;
+	tty.c_lflag &= ~ISIG; // Disable interpretation of INTR, QUIT and SUSP
+
+	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // No flow control
+	tty.c_iflag &= ~(ICRNL | INLCR); // Disable carriage return and newline conversion
+
+	tty.c_oflag &= ~OPOST; // Disable output processing
+
+	tcsetattr(fd, TCSANOW, &tty);
 
 	return fd;
 }

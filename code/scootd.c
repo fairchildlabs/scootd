@@ -121,7 +121,53 @@ void * videoX_usb_run(void * pvThread)
 	return NULL;
 
 }
+#define GPS_STATIC_BUFFER_SIZE (8 * 1024)
+char gps_static_buffer[GPS_STATIC_BUFFER_SIZE];
 
+void* gpxX_usb_run(void* pvThread)
+{
+	scootd_threads* pThread = pvThread;
+	scoot_device* pScootDevice = pThread->pvScootDevice;
+	int idx = pThread->idx;
+	int period_s = 5;
+	int count = 0;
+
+	if (pScootDevice->pState->gps.period)
+	{
+		period_s = pScootDevice->pState->gps.period;
+	}
+
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+	
+	if (pThread->infd)
+	{
+		char buffer[1024];
+		int n = 0;
+		while (true == pThread->bRun)
+		{
+			n = read(pThread->infd, gps_static_buffer, GPS_STATIC_BUFFER_SIZE - 1);
+			if (n > 0)
+			{
+				buffer[n] = 0;
+				SCOOTD_PRINT(verbose, "+++++++++++++++++++++++++++++++++++++++++++++++++(%d): %\n", count);
+				SCOOTD_PRINT(verbose, "GPS(%d): %s\n", n, gps_static_buffer);
+			}
+			else
+			{
+				SCOOTD_PRINT(verbose, "GPS: NO DATA(%d)\n",n);
+			}
+			count++;	
+			sleep(period_s);
+		}
+	}
+	else
+	{
+		SCOOTD_PRINT(verbose, "GPS: NO GPS(%d)\n", verbose);
+	}
+
+	return NULL;
+
+}
 
 
 
@@ -149,7 +195,6 @@ void scootd_close_log_file(void)
 	}
 			
 }	
-
 
 
 void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
@@ -188,6 +233,44 @@ void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
 		}
 
 	}
+	if (pOldState->gps.gps)
+	{
+		if (pThread->thread_handle)
+		{
+			scootd_util_kill_thread(pScootDevice, pThread);
+		}
+
+	}
+	
+	if (pScootDevice->pState->gps.gps)
+	{
+		SCOOTD_PRINT(verbose, "GPS.gps %d : %d\n", pScootDevice->pState->gps.gps, pScootDevice->pState->gps.period);
+
+		pThread = &pScootDevice->threads[SCOOTD_THREAD_GPS];
+		if (pThread->thread_handle)
+		{
+				scootd_util_kill_thread(pScootDevice, pThread);
+		}
+
+		if(!pThread->infd) 
+		{
+
+			const char* device = "/dev/ttyACM0";
+			pThread->infd = scootd_GPS_setupSerial(device);
+			SCOOTD_PRINT(verbose, "OPEN GPS: %d \n", pThread->infd);
+
+		}
+
+		if (pThread->infd)
+		{
+			pThread->thread_handle = scootd_util_create_thread(gpxX_usb_run, pThread);
+
+
+		}
+	
+	}
+
+
 
 }
 
