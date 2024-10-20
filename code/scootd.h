@@ -16,14 +16,18 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include <termios.h>
 
 #define SCOOTD_ASSERT(_X) assert(_X)
 
 
 #define SCOOTD_THREAD_VIDEO_0 0
+#define SCOOTD_MAX_VIDEO 2
 
 typedef union 
 {
+
+	
 	unsigned int state;
 	struct __attribute__((packed)) //packed means that the compiler doesn't add padding.   Otherwise, the compiler will line up weach vid[] on 32-bit or 64-bit boundary
 	{
@@ -33,7 +37,14 @@ typedef union
 		unsigned int rsvd         :  1; //bit 3
 		unsigned int resolution   :  4; 
 
-	} vid[2];
+	} vid[SCOOTD_MAX_VIDEO];
+	struct __attribute__((packed)) //packed means that the compiler doesn't add padding.   Otherwise, the compiler will line up weach vid[] on 32-bit or 64-bit boundary
+	{
+		unsigned int video_rsvd   :  16; 
+		unsigned int gps          :  1; //bit 16 
+		unsigned int period       :  7; //bit 17-23
+	} gps;
+
 
 } scoot_state ;  
 
@@ -49,6 +60,7 @@ typedef union
 #define SCOOTD_MAX_THREADS 16
 
 #define SCOOTD_THREAD_UTIL_BUFFER_SIZE 64
+
 
 
 typedef struct
@@ -102,6 +114,8 @@ int scootd_util_character_to_pipe(scootd_threads * pThread, char character);
 int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread);
 
 int scootd_util_close_shared_memroy(scoot_device *pScoot);
+int scootd_GPS_setupSerial(const char * device);
+
 
 
 #define SCOOTD_DBGLVL_NONE    0

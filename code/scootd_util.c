@@ -282,3 +282,34 @@ int scootd_util_character_to_pipe(scootd_threads * pThread, char character)
 
 
 
+
+int scootd_GPS_setupSerial(const char * device)
+{
+	int 			fd	= open(device, O_RDWR | O_NOCTTY | O_NDELAY);
+
+	if (fd == -1)
+	{
+		perror("open_port: Unable to open device");
+		return - 1;
+	}
+
+	struct termios options;
+	tcgetattr(fd, &options);
+
+	cfsetispeed(&options, B9600);
+	cfsetospeed(&options, B9600);
+
+	options.c_cflag 	|= (CLOCAL | CREAD);
+	options.c_cflag 	&= ~PARENB;
+	options.c_cflag 	&= ~CSTOPB;
+	options.c_cflag 	&= ~CSIZE;
+	options.c_cflag 	|= CS8;
+
+	tcsetattr(fd, TCSANOW, &options);
+
+	return fd;
+}
+
+
+
+

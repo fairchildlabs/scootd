@@ -161,7 +161,7 @@ void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
 
 	SCOOTD_PRINT(verbose, "scootd_state_change = 0x%08x  old_state = 0x%08x\n", pScootDevice->pState->state, pOldState->state);
 
-	for (i = 0; i < 2; i++)
+	for (i = 0; i < SCOOTD_MAX_VIDEO; i++)
 	{
 		unsigned char vid = *(unsigned char *)(&pOldState->vid[i]);
 
