@@ -20,6 +20,14 @@
 
 #define SCOOTD_ASSERT(_X) assert(_X)
 
+typedef struct 
+{
+    double latitude;
+    double longitude;
+    double altitude;
+    double ground_speed;
+} GPSData;
+
 
 #define SCOOTD_THREAD_VIDEO_0 0
 #define SCOOTTHREAD_VIDEO_1  1
@@ -120,6 +128,8 @@ int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread
 int scootd_util_close_shared_memroy(scoot_device *pScoot);
 int scootd_GPS_setupSerial(const char * device);
 
+void scootd_dump_gps_data(GPSData gpsData);
+GPSData scootd_parse_gps_data(const char * nmea_sentence);
 
 
 #define SCOOTD_DBGLVL_NONE    0

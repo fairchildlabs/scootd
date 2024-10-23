@@ -124,21 +124,25 @@ void * videoX_usb_run(void * pvThread)
 #define GPS_STATIC_BUFFER_SIZE (8 * 1024)
 char gps_static_buffer[GPS_STATIC_BUFFER_SIZE];
 
+
+
+
 void* gpxX_usb_run(void* pvThread)
 {
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 	scootd_threads* pThread = pvThread;
 	scoot_device* pScootDevice = pThread->pvScootDevice;
 	int idx = pThread->idx;
 	int period_s = 5;
 	int count = 0;
+	GPSData gpsData;
 
 	if (pScootDevice->pState->gps.period)
 	{
 		period_s = pScootDevice->pState->gps.period;
 	}
-
-	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 	
+
 	if (pThread->infd)
 	{
 		char buffer[1024];
@@ -149,8 +153,12 @@ void* gpxX_usb_run(void* pvThread)
 			if (n > 0)
 			{
 				buffer[n] = 0;
-				SCOOTD_PRINT(verbose, "+++++++++++++++++++++++++++++++++++++++++++++++++(%d): %\n", count);
-				SCOOTD_PRINT(verbose, "GPS(%d): %s\n", n, gps_static_buffer);
+				SCOOTD_PRINT(1, "+++++++++++++++++++++++++++++++++++++++++++++++++(%d): %\n", count);
+				SCOOTD_PRINT(0, "GPS(%d): %s\n", n, gps_static_buffer);
+				gpsData = scootd_parse_gps_data(gps_static_buffer);
+				scootd_dump_gps_data(gpsData);
+				
+				
 			}
 			else
 			{

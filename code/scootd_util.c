@@ -323,5 +323,96 @@ int scootd_GPS_setupSerial(const char * device)
 }
 
 
+void scootd_dump_gps_data(GPSData gpsData)
+{
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+
+	SCOOTD_PRINT(verbose, "GPS: Lat: %f Long: %f altitude: %f ground_speed %f\n", gpsData.latitude, gpsData.longitude, gpsData.altitude, gpsData.ground_speed);
+}
+
+
+double convert_to_decimal_degrees(const char * nmea_pos, char quadrant)
+{
+
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+
+	double			raw = atof(nmea_pos);
+	int 			degrees = (int) (raw / 100);
+	double			minutes = raw - (degrees * 100);
+	double			decimal = degrees + (minutes / 60);
+	double          result;
+		
+
+	result = (quadrant == 'S' || quadrant == 'W') ? -decimal: decimal;
+
+	SCOOTD_PRINT(verbose, "convert_to_decimal_degrees(%s, %c) raw=%f degrees=%d minutes=%f decimal = %f result = %f\n", nmea_pos, quadrant, raw, degrees, minutes, decimal, result);
+
+	return result;
+}
+
+
+
+//via copilot 
+GPSData scootd_parse_gps_data(const char *nmea_sentence) {
+    int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+    SCOOTD_PRINT(verbose, "++++++++++++++++++++++++++++++++++++++++++(%d)\n", 0);
+    SCOOTD_PRINT(verbose, "scootd_parse_gps_data() nmea_sentence = [(%s)]\n", nmea_sentence);
+    SCOOTD_PRINT(verbose, "------------------------------------------(%d)\n\n", 0);
+
+	int field_count;
+    GPSData data = {0};
+    char *gnrmc = strstr(nmea_sentence, "$GNRMC");
+    char *gngga = strstr(nmea_sentence, "$GNGGA");
+
+    if (gnrmc) {
+        char *token = strtok(gnrmc, ",");
+		field_count = 1;
+        while (token != NULL) {
+            if (field_count == 4) {
+                char *lat_token = token;
+                char *lat_dir_token = strtok(NULL, ",");
+                data.latitude = convert_to_decimal_degrees(lat_token, *lat_dir_token);
+                SCOOTD_PRINT(verbose, "scootd_parse_gps_data(%s) lat = %f\n", lat_token, data.latitude);
+                field_count++;
+            } else if (field_count == 6) {
+                char *lon_token = token;
+                char *lon_dir_token = strtok(NULL, ",");
+                data.longitude = convert_to_decimal_degrees(lon_token, *lon_dir_token);
+                SCOOTD_PRINT(verbose, "scootd_parse_gps_data(%s) long = %f\n", lon_token, data.longitude);
+                field_count++;
+            } else if (field_count == 8) {
+                data.ground_speed = atof(token) * 1.852; // Convert knots to km/h
+                SCOOTD_PRINT(verbose, "scootd_parse_gps_data(%s) ground_speed = %f\n", token, data.ground_speed);
+                field_count++;
+            }
+			
+            field_count++;
+			if(field_count > 8)
+			{
+				break;
+			}
+            token = strtok(NULL, ",");
+        }
+    }
+
+    if (gngga) 
+		{
+        char *token = strtok(gngga, ",");
+        int field_count = 0;
+        while (token != NULL) 
+		{
+            field_count++;
+            if (field_count == 10) {
+                data.altitude = atof(token);
+                SCOOTD_PRINT(verbose, "scootd_parse_gps_data() altitude = %f\n", data.altitude);
+                break;
+         }
+			SCOOTD_PRINT(verbose, "gngga(%d):%s\n", field_count, token);
+            token = strtok(NULL, ",");
+        }
+    }
+
+    return data;
+}
 
 
