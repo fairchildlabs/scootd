@@ -238,6 +238,7 @@ void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 
 	SCOOTD_PRINT(verbose, "scootd_state_change = 0x%08x  old_state = 0x%08x\n", pScootDevice->pState->state, pOldState->state);
+	scootd_event_state_change(pOldState->state, pScootDevice->pState->state);
 
 	for (i = 0; i < SCOOTD_MAX_VIDEO; i++)
 	{
