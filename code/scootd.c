@@ -281,11 +281,7 @@ void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
 		SCOOTD_PRINT(verbose, "GPS.gps %d : %d\n", pScootDevice->pState->gps.gps, pScootDevice->pState->gps.period);
 
 		pThread = &pScootDevice->threads[SCOOTD_THREAD_GPS];
-		if (pThread->thread_handle)
-		{
-				scootd_util_kill_thread(pScootDevice, pThread);
-		}
-
+	
 		if(!pThread->infd) 
 		{
 

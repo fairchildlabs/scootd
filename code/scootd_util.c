@@ -358,7 +358,7 @@ double convert_to_decimal_degrees(const char * nmea_pos, char quadrant)
 
 GPSData scootd_parse_gps_data(const char * nmea_sentence)
 {
-	int 			verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+	int 			verbose = scootd_get_verbosity(SCOOTD_DBGLVL_NONE);
 
 	SCOOTD_PRINT(verbose, "++++++++++++++++++++++++++++++++++++++++++(%d)\n", 0);
 	SCOOTD_PRINT(verbose, "scootd_parse_gps_data() nmea_sentence = [(%s)]\n", nmea_sentence);
@@ -441,21 +441,30 @@ GPSData scootd_parse_gps_data(const char * nmea_sentence)
 }
 
 
-float get_time_in_fseconds()
+double get_time_in_fseconds()
 {
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 	struct timeval tv;
+	double fsec;
 	gettimeofday(&tv, NULL);
-	return tv.tv_sec + tv.tv_usec / 1e6;
+
+	fsec = (double)tv.tv_sec + (double)(tv.tv_usec / 1000000.0);
+	
+	SCOOTD_PRINT(verbose, "get_time_in_fseconds(%d:%d) fsec = %f\n", tv.tv_sec, tv.tv_usec, fsec);
+
+	
+	return fsec;
 }
 void scootd_log_event(int ecode, float f1, float f2, float f3, float f4, int i1, int i2, int i3, int i4)
 {
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+	double fsec = get_time_in_fseconds();
 	
-	SCOOTD_PRINT(verbose, "LOG_EVENT(%p): % d, % f, % f, % f, % f, % f, % d, % d, % d, % d\n", gEvtLogFd, ecode, get_time_in_fseconds(), f1, f2, f3, f4, i1, i2, i3, i4);
+	SCOOTD_PRINT(verbose, "LOG_EVENT(%p): % d, % f, % f, % f, % f, % f, % d, % d, % d, % d\n", gEvtLogFd, ecode, fsec, f1, f2, f3, f4, i1, i2, i3, i4);
 
 	if (gEvtLogFd)
 	{
-		fprintf(gEvtLogFd, "%d, %f, %f, %f, %f, %f, %d, %d, %d, %d\n", ecode, get_time_in_fseconds(), f1, f2, f3, f4, i1, i2, i3, i4);
+		fprintf(gEvtLogFd, "%d, %f, %f, %f, %f, %f, %d, %d, %d, %d\n", ecode, fsec, f1, f2, f3, f4, i1, i2, i3, i4);
 
 		fflush(gEvtLogFd);
 
