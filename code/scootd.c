@@ -6,6 +6,7 @@
 
 
 FILE *gDbgLogFd = NULL;
+FILE *gEvtLogFd = NULL;
 
 /******************************************************/
 /********************* Functions ************************/
@@ -157,7 +158,8 @@ void* gpxX_usb_run(void* pvThread)
 				SCOOTD_PRINT(0, "GPS(%d): %s\n", n, gps_static_buffer);
 				gpsData = scootd_parse_gps_data(gps_static_buffer);
 				scootd_dump_gps_data(gpsData);
-				
+				scootd_event_gps(gpsData);
+
 				
 			}
 			else
@@ -203,6 +205,29 @@ void scootd_close_log_file(void)
 	}
 			
 }	
+void scootd_start_event_file(char* logfn)
+{
+	gEvtLogFd = fopen(logfn, "a");
+
+	if (gEvtLogFd)
+	{
+		SCOOTD_PRINT(SCOOTD_DBGLVL_ERROR, "**OPEN LOG(%s)%p**************************************************\n", logfn, gEvtLogFd);
+
+	}
+	else
+	{
+		printf("CAN NOT OPEN %s [%d] %s\n", logfn, errno, strerror(errno));
+	}
+}
+
+void scootd_close_event_file(void)
+{
+	if (gEvtLogFd)
+	{
+		fclose(gEvtLogFd);
+	}
+
+}
 
 
 void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
@@ -295,7 +320,8 @@ int main(int argc, char **argv)
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 	
 	scootd_start_log_file("scootdx.log");
-	
+	scootd_start_event_file("event.csv");
+
 	
 
 	//initialize memory zero
@@ -348,6 +374,7 @@ int main(int argc, char **argv)
 	}
 
 	scootd_close_log_file();
+	scootd_close_event_file();
 
 	return 0;
 }

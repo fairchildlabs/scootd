@@ -414,5 +414,30 @@ GPSData scootd_parse_gps_data(const char *nmea_sentence) {
 
     return data;
 }
+float get_time_in_fseconds()
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec + tv.tv_usec / 1e6;
+}
+void scootd_log_event(int ecode, float f1, float f2, float f3, float f4, int i1, int i2, int i3, int i4)
+{
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+	
+	SCOOTD_PRINT(verbose, "LOG_EVENT(%p): % d, % f, % f, % f, % f, % f, % d, % d, % d, % d\n", gEvtLogFd, ecode, get_time_in_fseconds(), f1, f2, f3, f4, i1, i2, i3, i4);
+
+	if (gEvtLogFd)
+	{
+		fprintf(gEvtLogFd, "%d, %f, %f, %f, %f, %f, %d, %d, %d, %d\n", ecode, get_time_in_fseconds(), f1, f2, f3, f4, i1, i2, i3, i4);
+
+		fflush(gEvtLogFd);
+
+	}
 
 
+}
+void scootd_event_gps(GPSData gpsData)
+{
+	scootd_log_event(EVT_SCOOTD_GPS, gpsData.latitude, gpsData.longitude, gpsData.altitude, gpsData.ground_speed, 0, 0, 0, 0);
+
+}

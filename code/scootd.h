@@ -130,6 +130,7 @@ int scootd_GPS_setupSerial(const char * device);
 
 void scootd_dump_gps_data(GPSData gpsData);
 GPSData scootd_parse_gps_data(const char * nmea_sentence);
+void scootd_event_gps(GPSData gpsData);
 
 
 #define SCOOTD_DBGLVL_NONE    0
@@ -148,6 +149,7 @@ static inline int scootd_get_verbosity(int local)
 }
 
 extern FILE *gDbgLogFd;
+extern FILE* gEvtLogFd;
 
 
 static inline void getCurrentTime(char *input, int max) 
@@ -191,6 +193,9 @@ static inline void scootd_dbg_printf(int verbose, const char *fmt, ...)
     }
 
 }
+
+#define EVT_SCOOTD_GPS 1
+
 
 #define SCOOTD_PRINT(__verbose, __format, ...) do { if( __verbose >= SCOOTD_DBGLVL_COMPILE) scootd_dbg_printf(__verbose, __format, __VA_ARGS__); } while (0)\
 
