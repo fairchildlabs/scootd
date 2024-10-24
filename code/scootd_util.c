@@ -470,16 +470,16 @@ double get_time_in_fseconds()
 	
 	return fsec;
 }
-void scootd_log_event(int ecode, float f1, float f2, float f3, float f4, int i1, int i2, int i3, int i4)
+void scootd_log_event(int ecode, float f1, float f2, float f3, float f4, int i1, int i2, int i3, int i4, char *s1, char* s2)
 {
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 	double fsec = get_time_in_fseconds();
 	
-	SCOOTD_PRINT(verbose, "LOG_EVENT(%p): % d, % f, % f, % f, % f, % f, % d, % d, % d, % d\n", gEvtLogFd, ecode, fsec, f1, f2, f3, f4, i1, i2, i3, i4);
+	SCOOTD_PRINT(verbose, "LOG_EVENT(%p): %d, %f, %f, %f, %f, %f, %d, %d, %d, %d, '%s','%s'\n", gEvtLogFd, ecode, fsec, f1, f2, f3, f4, i1, i2, i3, i4, s1, s2);
 
 	if (gEvtLogFd)
 	{
-		fprintf(gEvtLogFd, "%d, %f, %f, %f, %f, %f, %d, %d, %d, %d\n", ecode, fsec, f1, f2, f3, f4, i1, i2, i3, i4);
+		fprintf(gEvtLogFd, "%d, %f, %f, %f, %f, %f, %d, %d, %d, %d, '%s', '%s'\n", ecode, fsec, f1, f2, f3, f4, i1, i2, i3, i4, s1, s2);
 
 		fflush(gEvtLogFd);
 
@@ -489,14 +489,18 @@ void scootd_log_event(int ecode, float f1, float f2, float f3, float f4, int i1,
 }
 void scootd_event_gps(GPSData gpsData)
 {
-	scootd_log_event(EVT_SCOOTD_GPS, gpsData.latitude, gpsData.longitude, gpsData.altitude, gpsData.ground_speed, 0, 0, 0, 0);
+	scootd_log_event(EVT_SCOOTD_GPS, gpsData.latitude, gpsData.longitude, gpsData.altitude, gpsData.ground_speed, 0, 0, 0, 0, NULL, NULL);
 
 }
 
 void scootd_event_state_change(unsigned int old_state, unsigned int new_state)
 {
-
-	scootd_log_event(EVT_SCOOTD_STATE_CHANGE, 0.0, 0.0, 0.0, 0.0, old_state, new_state, 0, 0);
-
+	scootd_log_event(EVT_SCOOTD_STATE_CHANGE, 0.0, 0.0, 0.0, 0.0, old_state, new_state, 0, 0, NULL, NULL);
 }
+
+void scootd_event_video(int video_device, int fr, int res, int raw, char* fn, char* cmdbuf)
+{
+	scootd_log_event(EVT_SCOOTD_VIDEO, 0.0, 0.0, 0.0, 0.0, video_device, fr, res, raw, NULL, NULL);
+}
+
 

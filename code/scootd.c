@@ -115,6 +115,8 @@ void * videoX_usb_run(void * pvThread)
 		sprintf(cmdbuf, "ffmpeg -f v4l2 -framerate %d -video_size %s -i /dev/video%d -preset faster -pix_fmt yuv420p %s", fr, szRes, video_device, fn);
 	}
 
+	scootd_event_video(video_device, fr, pScootDevice->pState->vid[idx].resolution, raw, fn, cmdbuf);
+
 
 	SCOOTD_PRINT(verbose, "SENDING CMD> %s\n", cmdbuf);
 
