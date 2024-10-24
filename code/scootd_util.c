@@ -139,42 +139,57 @@ int pclose2(pid_t pid)
 
 //AI: https://copilot.microsoft.com/sl/jS6aPunFSKa
 
-int scootd_util_kill_thread(scoot_device *pScootDevice, scootd_threads	 *pThread)
+int scootd_util_kill_thread(scoot_device* pScootDevice, scootd_threads* pThread)
 {
-	printf("scootd_util_kill_thread(%d) \n", pThread->idx);
+	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
 
-	if(scootd_util_character_to_pipe(pThread, 'q'))
+	SCOOTD_PRINT(verbose, "scootd_util_kill_thread(%d) \n", pThread->idx);
+
+	if (pThread->idx < SCOOTD_THREAD_GPS)
 	{
-		printf("ERROR - CHAR 'q' to pipe(%d)\n", pThread->idx);
-		return -1;
-	}
-	else
-	{
-		printf("GOOD -  CHAR 'q' to pipe(%d)\n", pThread->idx);
+
+		if (scootd_util_character_to_pipe(pThread, 'q'))
+		{
+			printf("ERROR - CHAR 'q' to pipe(%d)\n", pThread->idx);
+			return -1;
+		}
+		else
+		{
+			printf("GOOD -  CHAR 'q' to pipe(%d)\n", pThread->idx);
+		}
+
+		printf("Sending SIGTERM\n");
+		kill(pThread->pid, SIGTERM);
+		printf("Sending SIGTERM kill done\n");
+		waitpid(pThread->pid, NULL, 0);
+		printf("Done WAIT PID(%d)\n", pThread->pid);
+		pclose2(pThread->pid);
+		printf("Done pclose2\n");
+		pThread->pid = (-1);
+
 	}
 
 	pThread->bRun = false;
-	printf("Sending SIGTERM\n");
-	kill(pThread->pid, SIGTERM);
-	printf("Sending SIGTERM kill done\n");
-	waitpid(pThread->pid, NULL, 0);
-	printf("Done WAIT PID(%d)\n", pThread->pid);
-	pclose2(pThread->pid);
-	printf("Done pclose2\n");
-	pThread->pid = (-1);
 
+	usleep(10);
 
-	while(false == pThread->bDone)	
+	while (false == pThread->bDone)
 	{
 		usleep(10);
 	}
 
 	printf("bDone Thread (%d)\n", pThread->idx);
 	//CLEANUP 
-
-	close(pThread->outfd);
-	close(pThread->infd);
-	
+	if (pThread->outfd)
+	{
+		close(pThread->outfd);
+		pThread->outfd = 0;
+	}
+	if (pThread->infd)
+	{
+		close(pThread->infd);
+		pThread->infd = 0;
+	}
 
 
 	pThread->bRun = false;

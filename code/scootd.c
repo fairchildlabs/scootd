@@ -148,6 +148,8 @@ void* gpxX_usb_run(void* pvThread)
 	{
 		char buffer[1024];
 		int n = 0;
+		int i;
+
 		while (true == pThread->bRun)
 		{
 			n = read(pThread->infd, gps_static_buffer, GPS_STATIC_BUFFER_SIZE - 1);
@@ -167,13 +169,23 @@ void* gpxX_usb_run(void* pvThread)
 				SCOOTD_PRINT(verbose, "GPS: NO DATA(%d)\n",n);
 			}
 			count++;	
-			sleep(period_s);
+
+			for (i = 0; i < period_s; i++)
+			{
+				if (false == pThread->bRun)
+				{
+					break;
+				}
+
+			}	sleep(period_s);
 		}
 	}
 	else
 	{
 		SCOOTD_PRINT(verbose, "GPS: NO GPS(%d)\n", verbose);
 	}
+
+	pThread->bDone = true;
 
 	return NULL;
 
@@ -267,22 +279,30 @@ void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
 		}
 
 	}
-	if (pOldState->gps.gps)
+	if (pOldState->gps.gps && (pScootDevice->pState->gps.gps))
 	{
+		SCOOTD_PRINT(verbose, "GPS set but was already set = %d\n", pScootDevice->pState->gps.gps);
+	}
+	else if (pOldState->gps.gps && (pScootDevice->pState->gps.gps == 0))
+	{
+
+		pThread = &pScootDevice->threads[SCOOTD_THREAD_GPS];
+
+		SCOOTD_PRINT(verbose, "pOldState->gps %d : %d\n", pScootDevice->pState->gps.gps, pScootDevice->pState->gps.period);
 		if (pThread->thread_handle)
 		{
+			SCOOTD_PRINT(verbose, "thread_handle %p\n", pThread->thread_handle);
 			scootd_util_kill_thread(pScootDevice, pThread);
 		}
 
 	}
-	
-	if (pScootDevice->pState->gps.gps)
+	else if (pScootDevice->pState->gps.gps)
 	{
 		SCOOTD_PRINT(verbose, "GPS.gps %d : %d\n", pScootDevice->pState->gps.gps, pScootDevice->pState->gps.period);
 
 		pThread = &pScootDevice->threads[SCOOTD_THREAD_GPS];
 	
-		if(!pThread->infd) 
+		if(0 == pThread->infd) 
 		{
 
 			const char* device = "/dev/ttyACM0";
@@ -294,10 +314,12 @@ void scootd_state_change(unsigned int old_state, scoot_device *	pScootDevice)
 		if (pThread->infd)
 		{
 			pThread->thread_handle = scootd_util_create_thread(gpxX_usb_run, pThread);
-
-
 		}
 	
+	}
+	else
+	{
+		SCOOTD_PRINT(verbose, "GPS NOT set = %d\n", pScootDevice->pState->gps.gps);
 	}
 
 
