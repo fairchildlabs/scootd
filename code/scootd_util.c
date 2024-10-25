@@ -500,7 +500,7 @@ void scootd_event_state_change(unsigned int old_state, unsigned int new_state)
 
 void scootd_event_video(int video_device, int fr, int res, int raw, char* fn, char* cmdbuf)
 {
-	scootd_log_event(EVT_SCOOTD_VIDEO, 0.0, 0.0, 0.0, 0.0, video_device, fr, res, raw, NULL, NULL);
+	scootd_log_event(EVT_SCOOTD_VIDEO, 0.0, 0.0, 0.0, 0.0, video_device, fr, res, raw, fn, cmdbuf);
 }
 
 
