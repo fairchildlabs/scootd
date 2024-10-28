@@ -3,6 +3,8 @@
 
 #include "scootd.h"
 
+FILE *gDbgLogFd = NULL;
+FILE *gEvtLogFd = NULL;
 
 int main(int argc, char **argv)
 {
