@@ -1,12 +1,37 @@
 import gmplot
+import csv
 
-# List of coordinates
-latitude_list = [29.688654, 29.688629, 29.688595, 29.688543, 29.688519, 29.688480, 29.688454, 29.688412, 29.688412, 29.688354, 29.688271, 29.688274, 29.688263, 29.688248, 29.688267, 29.688284, 29.688280, 29.688236, 29.688276, 29.688269, 29.688242, 29.688255, 29.688271, 29.688320, 29.688429, 29.688618, 29.688866, 29.689127, 29.689362, 29.689453, 29.689459, 29.689461]
-longitude_list = [-95.492538, -95.492523, -95.492493, -95.492493, -95.492485, -95.492508, -95.492523, -95.492546, -95.492546, -95.492531, -95.492653, -95.493050, -95.493614, -95.494217, -95.494843, -95.495514, -95.496147, -95.496597, -95.496765, -95.497093, -95.497604, -95.498230, -95.498917, -95.499596, -95.500237, -95.500870, -95.501457, -95.501945, -95.502312, -95.502411, -95.502419, -95.502426]
+def read_gps_data_from_csv(file_path):
+    latitude_list = []
+    longitude_list = []
+
+    with open(file_path, mode='r') as file:
+        csv_reader = csv.reader(file)
+        for row in csv_reader:
+            if row[0] == '2':
+                try:
+                    latitude = float(row[2])
+                    longitude = float(row[3])
+                    latitude_list.append(latitude)
+                    longitude_list.append(longitude)
+                except ValueError:
+                    # Skip rows with invalid data
+                    continue
+
+    return latitude_list, longitude_list
+
+# Path to your CSV file
+file_path = "C:\\source\\fairchildlabs\\event.txt"
+
+# Read GPS data from CSV file
+latitude_list, longitude_list = read_gps_data_from_csv(file_path)
 
 # Create a plot on the map
-gmap = gmplot.GoogleMapPlotter(29.688654, -95.492538, 15)  # Start plotting at the first point
-gmap.scatter(latitude_list, longitude_list, color='red', size=50, marker=True)
+if latitude_list and longitude_list:
+    gmap = gmplot.GoogleMapPlotter(latitude_list[0], longitude_list[0], 15)  # Start plotting at the first point
+    gmap.scatter(latitude_list, longitude_list, color='red', size=50, marker=True)
 
-# Save the map to an HTML file
-gmap.draw("map.html")
+    # Save the map to an HTML file
+    gmap.draw("map.html")
+else:
+    print("No valid GPS data found in the CSV file.")
