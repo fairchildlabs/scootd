@@ -1,0 +1,49 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\source\\fairchildlabs\\scootd\\code\\mapgps\\mapgps\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{4E2716F2-973F-4BB2-8B1E-A4126D7EED7B}|mapgps\\mapgps.pyproj|C:\\source\\fairchildlabs\\scootd\\code\\mapgps\\mapgps\\mapgps\\mapgps.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{4E2716F2-973F-4BB2-8B1E-A4126D7EED7B}|mapgps\\mapgps.pyproj|solutionrelative:mapgps\\mapgps.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "mapgps.py",
+              "DocumentMoniker": "C:\\source\\fairchildlabs\\scootd\\code\\mapgps\\mapgps\\mapgps\\mapgps.py",
+              "RelativeDocumentMoniker": "mapgps\\mapgps.py",
+              "ToolTip": "C:\\source\\fairchildlabs\\scootd\\code\\mapgps\\mapgps\\mapgps\\mapgps.py",
+              "RelativeToolTip": "mapgps\\mapgps.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2024-10-30T22:35:29.628Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
