@@ -77,7 +77,8 @@ int iFrameRateCam[] =
 //ffprobe -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of default=noprint_wrappers=1:nokey=1 
 
 
-char *szBaseVideoPath = "/mnt/";
+//char *szBaseVideoPath = "/mnt/";
+char *szBaseVideoPath = "/var/www/html/video_13/";
 
 void * videoX_usb_run(void * pvThread)
 {
