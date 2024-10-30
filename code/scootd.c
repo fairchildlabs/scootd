@@ -339,6 +339,8 @@ int main(int argc, char **argv)
 	struct tm *tmp;
 	char formatted_time[50];
 	int verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+	int sys_info_period = 5000;
+	int count = 0;
 	
 	scootd_start_log_file("scootdx.log");
 	scootd_start_event_file("event.csv");
@@ -382,13 +384,20 @@ int main(int argc, char **argv)
 				old_state = aScootDevice.pState->state;
 
 				usleep(1000);
+
+
 			}
 			else
 			{
 			//	printf("SCOOTD: NO Change\n");
 			}
 			
+			if(0 == (count % sys_info_period))
+			{
+				scootd_util_sys_info();
+			}
 			usleep(1000);
+			count++;
 		}
 		scootd_util_close_shared_memroy(&aScootDevice);
 		

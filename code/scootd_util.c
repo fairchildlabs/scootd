@@ -46,6 +46,62 @@ int scootd_util_close_shared_memroy(scoot_device *pScoot)
 }
 
 
+SystemInfo get_system_info() 
+{
+    FILE *file;
+    char buffer[128];
+    SystemInfo sys_info = {0};
+
+    // Get CPU utilization
+    file = fopen("/proc/stat", "r");
+    if (file != NULL) {
+        fgets(buffer, sizeof(buffer), file);
+        unsigned long user, nice, system, idle, iowait, irq, softirq;
+        sscanf(buffer, "cpu %lu %lu %lu %lu %lu %lu %lu", &user, &nice, &system, &idle, &iowait, &irq, &softirq);
+        fclose(file);
+        unsigned long total = user + nice + system + idle + iowait + irq + softirq;
+        unsigned long total_idle = idle + iowait;
+        sys_info.cpu_utilization = 100.0 * (total - total_idle) / total;
+    }
+
+    // Get memory usage
+    file = fopen("/proc/meminfo", "r");
+    if (file != NULL) {
+        unsigned long mem_total = 0, mem_available = 0;
+        while (fgets(buffer, sizeof(buffer), file)) {
+            sscanf(buffer, "MemTotal: %lu kB", &mem_total);
+            sscanf(buffer, "MemAvailable: %lu kB", &mem_available);
+        }
+        fclose(file);
+        sys_info.mem_usage_mb = (mem_total - mem_available) / 1024.0;
+    }
+
+    // Get system uptime
+    file = fopen("/proc/uptime", "r");
+    if (file != NULL) {
+        fscanf(file, "%lf", &sys_info.uptime_seconds);
+        fclose(file);
+    }
+
+    return sys_info;
+}
+
+void scootd_util_sys_info(void)
+{
+	int 			verbose = scootd_get_verbosity(SCOOTD_DBGLVL_ERROR);
+	SystemInfo sysinfo;
+
+	sysinfo = get_system_info();
+
+	SCOOTD_PRINT(verbose, "scootd_util_sys_info() CPuUtil = %f mem = %f uptime = %f\n", sysinfo.cpu_utilization, sysinfo.mem_usage_mb, sysinfo.uptime_seconds);
+
+	scootd_event_sysinfo(sysinfo);
+	
+
+
+}
+
+
 
 //AI: https://copilot.microsoft.com/sl/huDnvWgVZZY
 
@@ -502,5 +558,12 @@ void scootd_event_video(int video_device, int fr, int res, int raw, char* fn, ch
 {
 	scootd_log_event(EVT_SCOOTD_VIDEO, 0.0, 0.0, 0.0, 0.0, video_device, fr, res, raw, fn, cmdbuf);
 }
+
+void scootd_event_sysinfo(SystemInfo sysinfo)
+{
+	scootd_log_event(EVT_SCOOTD_SYSINFO, sysinfo.cpu_utilization, sysinfo.mem_usage_mb, sysinfo.uptime_seconds, 0.0, 0, 0, 0, 0, NULL, NULL);
+}
+	
+
 
 
